@@ -88,15 +88,25 @@
         <activity android:name=".UploadPictureActivity" />
 
 
-        <activity android:name=".MyDrivewayPhoto"
+        <activity
+            android:name=".MyDrivewayPhoto"
             android:label="Plowed Driveway"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
-
-
         </activity>
+
+
+        <activity android:name=".PlowedDrivewayPhotoRating"
+            android:label="Plowed Driveway Evaluation"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"/>
+        </activity>
+
+
     </application>
 
 </manifest>

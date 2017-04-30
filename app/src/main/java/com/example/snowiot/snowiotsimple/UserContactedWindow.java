@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -52,6 +53,8 @@ public class UserContactedWindow extends AppCompatActivity {
 
     private StorageReference mDrivewayPhotoFolder = FirebaseStorage.getInstance().getReference();
 
+    String contactorUID;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +74,8 @@ public class UserContactedWindow extends AppCompatActivity {
 
         mRootRef = FirebaseDatabase.getInstance().getReference();
 
+        SharedPreferences sharedPreferences = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE);
+
         final DatabaseReference mUserInfoRef = mRootRef.child("driveways/" + ((GlobalVariables) this.getApplication()).getUserUID());
         mUserHandleRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/users/" + ((GlobalVariables) this.getApplication()).getUserUID() + "/requesthandle");
         mContactorHandleRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/users/" + ((GlobalVariables) this.getApplication()).getContacterUID() + "/requesthandle");
@@ -81,12 +86,11 @@ public class UserContactedWindow extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 holdContacterInfo = dataSnapshot.getValue(Driveways.class);
 
+                contactorUID = dataSnapshot.getKey();
+
                 mContacterName.setText("Provider: " + holdContacterInfo.getName());
                 mContacterName.setTextSize(18);
                 mContacterName.setTextColor(Color.BLACK);
-//                mContacterInfo.setText("Info: " + holdUserInfo.address.getStreet() + ", " + holdUserInfo.address.getCity() + ", " + holdUserInfo.address.getState());
-//                mContacterInfo.setTextSize(18);
-//                mContacterInfo.setTextColor(Color.BLACK);
             }
 
             @Override
@@ -98,12 +102,15 @@ public class UserContactedWindow extends AppCompatActivity {
         mAcceptService.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                mContactorHandleRef.child("acceptdecline").setValue(1); //Use contactor's database section instead since there is a possibility that the user might accept someone else's offer
-//                mContactorHandleRef.child("recipientUserID").setValue(((GlobalVariables) getApplication()).getUserUID());
                 mUserInfoRef.child("status").setValue(3);                             //Turn user marker on map blue
                 mUserHandleRef.child("prompt").setValue(0);             //If user accepts offer then reset prompt that triggers notification
                 mUserHandleRef.child("jobAssignedToUID").setValue(((GlobalVariables) getApplication()).getContacterUID());
                 mContactorHandleRef.child("jobDeliveredToUID").setValue(((GlobalVariables) getApplication()).getUserUID());
+
+                SharedPreferences.Editor editor = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE).edit();
+                editor.putString("jobTakenBy", holdContacterInfo.getName());
+                editor.putString("jobTakenByUID", contactorUID);
+                editor.commit();
                 finish();
             }
         });
@@ -112,8 +119,6 @@ public class UserContactedWindow extends AppCompatActivity {
         mDeclineService.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                mContactorHandleRef.child("acceptdecline").setValue(0); //Use contactor's database section instead since there is a possibility that the user might accept someone else's offer
-//                mContactorHandleRef.child("recipientUserID").setValue(((GlobalVariables) getApplication()).getUserUID());
                 mUserHandleRef.child("prompt").setValue(0);             //If user declines offer then reset prompt that triggers notification
                 mUserHandleRef.child("jobAssignedToUID").setValue("null");
                 mContactorHandleRef.child("jobDeliveredToUID").setValue("null");

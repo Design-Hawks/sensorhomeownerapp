@@ -5,8 +5,9 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.Button;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,31 +21,45 @@ import com.squareup.picasso.Picasso;
 
 import org.w3c.dom.Text;
 
+public class PlowedDrivewayPhotoRating extends AppCompatActivity {
 
-public class MyDrivewayPhoto extends AppCompatActivity {
-
-
-    private TextView mPhotoUploadedOn, mPhotoUploadedBy;
+    private TextView mPhotoUploadedBy;
     private ImageView mPlowedDrivewayPhoto;
+    private RatingBar mRateJob;
+
 
     private StorageReference mDrivewayPhotoFolder = FirebaseStorage.getInstance().getReference();
-    private DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my_driveway_photo);
+        setContentView(R.layout.activity_plowed_driveway_photo_rating);
 
-        SharedPreferences sharedPreferences = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE);
+       final SharedPreferences sharedPreferences = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE);
 
-        mPlowedDrivewayPhoto = (ImageView) findViewById(R.id.drivewayFinishedPhoto);
+        final DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
+        final DatabaseReference mUserRef = mRootRef.child("users/" + ((GlobalVariables) getApplication()).getUserUID()); //dynamic reference to requesthandle)
+
+            mPlowedDrivewayPhoto = (ImageView) findViewById(R.id.drivewayFinishedPhoto);
         mPhotoUploadedBy = (TextView) findViewById(R.id.uploadedBy);
+        mRateJob = (RatingBar) findViewById(R.id.snowPlowRating);
 
-        mPhotoUploadedBy.setText("Last Job Performed By: " + sharedPreferences.getString("lastJobDoneBy", "null"));
+        mPhotoUploadedBy.setText("Service provided by: " + sharedPreferences.getString("lastJobDoneBy", "null"));
 
-        downloadPlowedDrivewayPhoto();
+        mRateJob.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
 
-    }
+                mRootRef.child("users/" + ((GlobalVariables) getApplication()).getUserUID() + "/requesthandle/pendingSnowPlowRating").setValue("null");                 //Reset flag
+                mRootRef.child("users/" + sharedPreferences.getString("jobTakenByUID", "null") + "/ratings/" + ((GlobalVariables) getApplication()).getUserUID()).setValue(rating);
+                mUserRef.child("requesthandle/prompt").setValue(0);
+                finish();
+
+            }
+        });
+            downloadPlowedDrivewayPhoto();
+
+        }
 
     public void downloadPlowedDrivewayPhoto(){
 

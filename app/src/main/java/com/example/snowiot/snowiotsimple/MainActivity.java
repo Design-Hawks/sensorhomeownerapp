@@ -7,6 +7,7 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -45,23 +46,6 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
-
-
-    /**
-     * Area dedicated to notification experiment
-     */
-
-    NotificationManager notificationManager;
-
-    boolean notificationActive = false;
-
-    int notificationID = 1;
-
-    /**
-     * End of notification test
-     */
-
-
     //to check if user is already or still logged in
     private FirebaseAuth.AuthStateListener mAuthListener;
     //define firebase auth
@@ -71,14 +55,13 @@ public class MainActivity extends AppCompatActivity {
     private Switch mSetLedSignal;
     private ListView mListView;
     private TextView mLastUpdatedOn;
-//    ImageView snowIotTitle;
 
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
-    DatabaseReference mLedSignalRef = mRootRef.child("ledSignal");    //reference to LED status variable
 
     int metricMode = 1;
     String userType;
 
+    NotificationManager notificationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +70,8 @@ public class MainActivity extends AppCompatActivity {
 
         mLastUpdatedOn = (TextView) findViewById(R.id.timeStamp);
         mListView = (ListView) findViewById(R.id.sensorListView);
-        mSetLedSignal = (Switch) findViewById(R.id.ledSignal);
 
-//            snowIotTitle = (ImageView) findViewById(R.id.snowIotText);
-
-//            Picasso.with(getApplicationContext()).load("http://i.imgur.com/qoku2bl.png").into(snowIotTitle); //pass image into imgview
+       final SharedPreferences sharedPreferences = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE);
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -112,21 +92,9 @@ public class MainActivity extends AppCompatActivity {
 
         ((GlobalVariables) this.getApplication()).storeUserUID(mUser.getUid());      //store useruid in a global variable so that it can be accessed by all activities
 
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/sensors/" + mUser.getUid() + "/livesensor");      //dynamic reference based on user logged in
-        DatabaseReference mUserHandleRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/users/" + mUser.getUid() + "/requesthandle"); //dynamic reference to requesthandle
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("sensors/" + mUser.getUid() + "/livesensor");      //dynamic reference based on user logged in
+        DatabaseReference mUserHandleRef = FirebaseDatabase.getInstance().getReference("users/" + mUser.getUid() + "/requesthandle"); //dynamic reference to requesthandle
         //Determine user type at the main activity so that when other activities are called, a different activity will be called depending on whether user is snowplow owner or sensor owner.
-        DatabaseReference mUserTypeRef = mRootRef.child("driveways/" + mUser.getUid() + "/type");
-        mUserTypeRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                userType = dataSnapshot.getValue(String.class);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
 
 
         //Monitor whether a snow plow has provided the user their ID, which is used in the confirmation page
@@ -160,29 +128,14 @@ public class MainActivity extends AppCompatActivity {
                     mUserDriveway.child("status").setValue(2);
                 }
                 else if (p == 3){
-                    generalNotification("Snow-Sense Service Provider", "Your driveway has been plowed. Click to see the picture. ", "Alert: Your driveway has been plowed.");
-                    mPromptNotification.setValue(0);
+                    alertUserOfJobComplete("Snow-Sense Service Provider", "Your driveway has been plowed. Click to see the picture. ", "Alert: Your driveway has been plowed.");
                     DatabaseReference mUserDriveway = mRootRef.child("driveways/" + mUser.getUid());
                     mUserDriveway.child("status").setValue(1);
-                }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        //Monitor when "user to have job delivered to" flag changes in the database to trigger action
-        DatabaseReference mAcceptDeclineNotification = mUserHandleRef.child("jobDeliveredToUID");
-        mAcceptDeclineNotification.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                String s = dataSnapshot.getValue(String.class);
-                if(!(s.equals("null"))){
-                    ((GlobalVariables) getApplication()).setJobDeliveredToUID(s);
-                    alertSnowplowNotification("Snow-Sense User Response", "User has accepted your offer. Click to open assignment window.","User has accepted your offer.");
+                    SharedPreferences.Editor editor = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE).edit();
+                   String lastPlowedBy = sharedPreferences.getString("jobTakenBy", "null");
+                    editor.putString("lastJobDoneBy", lastPlowedBy);
+                    editor.commit();
                 }
             }
 
@@ -273,24 +226,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        //LED Switch code block
-        mSetLedSignal.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean switchPressed) {
-
-                if (switchPressed) {
-                    Toast.makeText(getApplicationContext(), "Sensors ON", Toast.LENGTH_SHORT).show(); //Display message on screen.
-                    mLedSignalRef.setValue(1);  //if switch is checked, then set LED signal to 1 (on firebase)
-                } else {
-                    Toast.makeText(getApplicationContext(), "Sensors OFF", Toast.LENGTH_SHORT).show();
-                    mLedSignalRef.setValue(0);  //if switch is not checked, then set LED signal to 0 (on firebase)
-                }
-
-            }
-        });
-
         mAuth.addAuthStateListener(mAuthListener);  //Add authenticator state listener
-
 
     }
 
@@ -311,12 +247,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        if (id == R.id.action_credits) {
-            Intent creditsSelect = new Intent(MainActivity.this, Credits.class);
-            startActivity(creditsSelect);
-            return true;
-        }
-
         if (id == R.id.action_map) {
             Intent drivewaySensorsMap = new Intent(MainActivity.this, maps.class);
             startActivity(drivewaySensorsMap);
@@ -332,12 +262,6 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_drivewayphoto) {
             Intent drivewayPicture = new Intent(MainActivity.this, MyDrivewayPhoto.class);
             startActivity(drivewayPicture);
-            return true;
-        }
-
-        if (id == R.id.action_contacterrequest) {
-            Intent userContactedWindow = new Intent(MainActivity.this, MapsServiceMode.class);
-            startActivity(userContactedWindow);
             return true;
         }
 
@@ -408,30 +332,6 @@ public class MainActivity extends AppCompatActivity {
 //        notificationActive = true;
     }
 
-    /**
-     *Copy of "alertSensorUserOfService"
-     */
-    public void alertSnowplowNotification (String contentTitle, String contentText, String contentTicker){
-
-        //Set notification message contents
-        NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new
-                NotificationCompat.Builder(this)
-                .setContentTitle(contentTitle)
-                .setContentText(contentText)
-                .setTicker(contentTicker)
-                .setAutoCancel(true)                                    //Automatically clear notification when clicked on the task bar
-                .setSmallIcon(R.drawable.alreadyplowing);
-
-        notificationBuilder.setDefaults(NotificationCompat.DEFAULT_SOUND);
-        Intent mapsWindow = new Intent(this, MapsServiceMode.class);
-        TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(this);
-        taskStackBuilder.addParentStack(MapsServiceMode.class);
-        taskStackBuilder.addNextIntent(mapsWindow);
-        PendingIntent pendingIntent = taskStackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-        notificationBuilder.setContentIntent(pendingIntent);
-        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(2, notificationBuilder.build());
-    }
 
     /**
      *Copy of "alertSensorUserOfService"
@@ -448,6 +348,7 @@ public class MainActivity extends AppCompatActivity {
                 .setSmallIcon(R.drawable.alreadyplowing);
 
         notificationBuilder.setDefaults(NotificationCompat.DEFAULT_SOUND);
+        notificationBuilder.setOnlyAlertOnce(true);
         Intent sensorUI = new Intent(this, MainActivity.class);
         TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(this);
         taskStackBuilder.addParentStack(MainActivity.class);
@@ -457,6 +358,34 @@ public class MainActivity extends AppCompatActivity {
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(3, notificationBuilder.build());
     }
+
+    /**
+     *Copy of "alertSensorUserOfService"
+     */
+    public void notifySensorOwnerOfJobFinished (String contentTitle, String contentText, String contentTicker){
+
+        //Set notification message contents
+        NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new
+                NotificationCompat.Builder(this)
+                .setContentTitle(contentTitle)
+                .setContentText(contentText)
+                .setTicker(contentTicker)
+                .setAutoCancel(true)                                    //Automatically clear notification when clicked on the task bar
+                .setSmallIcon(R.drawable.alreadyplowing);
+
+        notificationBuilder.setDefaults(NotificationCompat.DEFAULT_SOUND);
+        notificationBuilder.setOnlyAlertOnce(true);
+        Intent sensorUI = new Intent(this, MainActivity.class);
+        TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(this);
+        taskStackBuilder.addParentStack(MainActivity.class);
+        taskStackBuilder.addNextIntent(sensorUI);
+        PendingIntent pendingIntent = taskStackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        notificationBuilder.setContentIntent(pendingIntent);
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(3, notificationBuilder.build());
+    }
+
+
 
     /**
      *Copy of "alertSensorUserOfService"
@@ -473,6 +402,30 @@ public class MainActivity extends AppCompatActivity {
                 .setSmallIcon(R.drawable.alreadyplowing);
 
         notificationBuilder.setDefaults(NotificationCompat.DEFAULT_SOUND);
+        notificationBuilder.setOnlyAlertOnce(true);
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(4, notificationBuilder.build());
+    }
+
+    public void alertUserOfJobComplete (String contentTitle, String contentText, String contentTicker){
+
+        //Set notification message contents
+        NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new
+                NotificationCompat.Builder(this)
+                .setContentTitle(contentTitle)
+                .setContentText(contentText)
+                .setTicker(contentTicker)
+                .setAutoCancel(true)                                    //Automatically clear notification when clicked on the task bar
+                .setSmallIcon(R.drawable.alreadyplowing);
+
+        notificationBuilder.setDefaults(NotificationCompat.DEFAULT_SOUND);
+        notificationBuilder.setOnlyAlertOnce(true);
+        Intent ratingWindow = new Intent(this, PlowedDrivewayPhotoRating.class);
+        TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(this);
+        taskStackBuilder.addParentStack(PlowedDrivewayPhotoRating.class);
+        taskStackBuilder.addNextIntent(ratingWindow);
+        PendingIntent pendingIntent = taskStackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        notificationBuilder.setContentIntent(pendingIntent);
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(4, notificationBuilder.build());
     }
@@ -534,12 +487,4 @@ public class MainActivity extends AppCompatActivity {
      * End of in-app alerts
      */
 
-
-
-//Back button won't close MainActivity
-  /*  @Override
-    public void onBackPressed() {
-        moveTaskToBack(false);
-    }
-    */
 }
