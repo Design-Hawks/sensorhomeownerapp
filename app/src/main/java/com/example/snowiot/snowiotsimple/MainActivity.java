@@ -444,14 +444,22 @@ public class MainActivity extends AppCompatActivity {
         final DatabaseReference mSnowThresholdFlag = mRootRef.child("users/" + mUser.getUid() + "/snowwarning/");
 
         AlertDialog.Builder mAlert = new AlertDialog.Builder(this);
-        mAlert.setMessage("Snow threshold reached. Allow snowplowers to detect you?")
+        mAlert.setMessage("Snow threshold reached. Allow snowplowers to offer their services?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
                         mServiceRequestEnable.child("status").setValue(2);
                         mSnowThresholdFlag.child("snowThresholdFlag").setValue(0);
-                        notificationManager.cancel(3);                  //close notification regarding snow buildup
+                        mSnowThresholdFlag.child("enableWarning").setValue(0);        //disable warnings regarding snow threshold to stop message spam after user presses ok
+                        notificationManager.cancel(3);                  //ends notification regarding snow buildup
+
+                        SharedPreferences.Editor editor = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE).edit();
+                        editor.putBoolean("enableSnowWarningPressed", false);  //disable switch in "Settings" activity
+                        editor.commit();
+
+                        Toast.makeText(getApplicationContext(), "Snowplows are now able to provide you service. Automatic snow warnings disabled.", Toast.LENGTH_SHORT).show();
+
                         dialog.dismiss();
 
                     }

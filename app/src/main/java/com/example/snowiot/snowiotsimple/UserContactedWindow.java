@@ -47,7 +47,7 @@ public class UserContactedWindow extends AppCompatActivity {
      */
 
     private Button mAcceptService, mDeclineService, mNotificationTest;
-    private TextView mContacterName, mContactorInfo;
+    private TextView mContacterName, mContactorRating;
     private ImageView mContactorPhoto;
     private Driveways holdContacterInfo;
 
@@ -64,22 +64,47 @@ public class UserContactedWindow extends AppCompatActivity {
         mDeclineService = (Button) findViewById(R.id.declineContacter);
 //        mNotificationTest = (Button) findViewById(R.id.notifytest);
         mContacterName = (TextView) findViewById(R.id.contacterName);
-        mContactorInfo = (TextView) findViewById(R.id.contacterInfo);
+        mContactorRating = (TextView) findViewById(R.id.contactorRating);
         mContactorPhoto = (ImageView) findViewById(R.id.snowPlowPhoto);
 
-        final DatabaseReference mUserHandleRef;
-        final DatabaseReference mContactorHandleRef;
-        DatabaseReference mRootRef;
-        DatabaseReference mContactorInfoRef;
+        final DatabaseReference mUserHandleRef, mContactorInfoRef, mRootRef, mContactorHandleRef, mSnowPlowRating;
 
         mRootRef = FirebaseDatabase.getInstance().getReference();
 
         SharedPreferences sharedPreferences = getSharedPreferences("com.example.snowiot.snowiotsimple", MODE_PRIVATE);
 
         final DatabaseReference mUserInfoRef = mRootRef.child("driveways/" + ((GlobalVariables) this.getApplication()).getUserUID());
-        mUserHandleRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/users/" + ((GlobalVariables) this.getApplication()).getUserUID() + "/requesthandle");
-        mContactorHandleRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/users/" + ((GlobalVariables) this.getApplication()).getContacterUID() + "/requesthandle");
-        mContactorInfoRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/driveways/" + ((GlobalVariables) this.getApplication()).getContacterUID());
+//        mUserHandleRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/users/" + ((GlobalVariables) this.getApplication()).getUserUID() + "/requesthandle");
+//        mContactorHandleRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/users/" + ((GlobalVariables) this.getApplication()).getContacterUID() + "/requesthandle");
+//        mContactorInfoRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://snowtotals-68015.firebaseio.com/driveways/" + ((GlobalVariables) this.getApplication()).getContacterUID());
+        mUserHandleRef = mRootRef.child("users/" + ((GlobalVariables) getApplication()).getUserUID() + "/requesthandle");
+        mContactorHandleRef = mRootRef.child("users/" + ((GlobalVariables) this.getApplication()).getContacterUID() + "/requesthandle");
+        mContactorInfoRef = mRootRef.child("driveways/" + ((GlobalVariables) this.getApplication()).getContacterUID());
+        mSnowPlowRating = mRootRef.child("users/" + ((GlobalVariables) this.getApplication()).getContacterUID() + "/ratings");
+
+        mSnowPlowRating.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            float f = 0.0f;
+            int count = 0;
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                Iterable<DataSnapshot> dataSnapshots = dataSnapshot.getChildren();
+                for (DataSnapshot dataSnapshot1 : dataSnapshots) {
+
+                    f = f + dataSnapshot1.getValue(Float.class);
+                    count = count + 1;
+                }
+
+                mContactorRating.setText("Snowplow rating: " + Float.toString(f/count));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         mContactorInfoRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

@@ -127,7 +127,9 @@ public class maps extends AppCompatActivity implements
                 TextView markerInfo = (TextView) v.findViewById(R.id.markerInfo);
                 ImageView infoWindowPicture = (ImageView) v.findViewById(R.id.infoWindowPicture);
 
-                Picasso.with(getApplicationContext()).load("http://i.imgur.com/ZMuAG6F.png").into(infoWindowPicture); //pass image into imgview
+//                Picasso.with(getApplicationContext()).load("http://i.imgur.com/ZMuAG6F.png").into(infoWindowPicture); //pass image into imgview
+
+                infoWindowPicture.setImageResource(R.drawable.needsplowing);
 
                 markerInfo.setText(marker.getSnippet());
 
@@ -187,7 +189,7 @@ public class maps extends AppCompatActivity implements
 
                 Driveways updatedDrivewayData = dataSnapshot.getValue(Driveways.class);
 
-                if (userMarkers.containsKey(dataSnapshot.getKey())) {
+//                if (userMarkers.containsKey(dataSnapshot.getKey())) {
 
                     userMarkers.put(dataSnapshot.getKey(), updatedDrivewayData);
                     drivewayMap.clear();
@@ -200,17 +202,17 @@ public class maps extends AppCompatActivity implements
                         if ((key.equals(userUID))) {
                             if ((driveway.getType().equals("sensor")) && (driveway.getStatus() == 1)) {
                                 drivewayMap.addMarker(new MarkerOptions().position(new LatLng(driveway.getLatitude(), driveway.getLongitude()))
-                                        .title(dataSnapshot.getKey())                                                                                       //get node name, which should be user UID
+                                        .title(key)                                                                                       //get node name, which should be user UID
                                         .snippet(driveway.getName() + " at:" + driveway.address.getStreet() + ", " + driveway.address.getCity() + ", " + driveway.address.getState())    //Tutorial on this code by "GDD Recife" on youtube
                                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));                                                                //Green means operating but not in need of service
                             } else if ((driveway.getType().equals("sensor")) && (driveway.getStatus() == 2)) {
                                 drivewayMap.addMarker(new MarkerOptions().position(new LatLng(driveway.getLatitude(), driveway.getLongitude()))
-                                        .title(dataSnapshot.getKey())
+                                        .title(key)
                                         .snippet(driveway.getName() + " at: " + driveway.address.getStreet() + ", " + driveway.address.getCity() + ", " + driveway.address.getState())
                                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));                                                                  //Red means operating and in need of service
                             } else if ((driveway.getType().equals("sensor")) && (driveway.getStatus() == 3)) {
                                 drivewayMap.addMarker(new MarkerOptions().position(new LatLng(driveway.getLatitude(), driveway.getLongitude()))
-                                        .title(dataSnapshot.getKey())
+                                        .title(key)
                                         .snippet(driveway.getName() + " at: " + driveway.address.getStreet() + ", " + driveway.address.getCity() + ", " + driveway.address.getState())
                                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));                                                                 //Blue means operating and already being serviced by a snowplow
                             }
@@ -218,21 +220,13 @@ public class maps extends AppCompatActivity implements
 
                         else if (driveway.getType().equals("plower") && (driveway.getStatus() != 0)) {
                             drivewayMap.addMarker(new MarkerOptions().position(new LatLng(driveway.getLatitude(), driveway.getLongitude()))                                 //Status: 0 = not on duty, 1 = on duty and standby, 2 = on duty but busy
-                                    .title(dataSnapshot.getKey())
+                                    .title(key)
                                     .snippet(driveway.getName())
                                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.plower)));
                         }
                     }
 
-                }
-
-                else if (updatedDrivewayData.getType().equals("plower") && (updatedDrivewayData.getStatus() != 0)){
-                    drivewayMap.addMarker(new MarkerOptions().position(new LatLng(updatedDrivewayData.getLatitude(), updatedDrivewayData.getLongitude()))                 //This section accounts for snowplowers that might come online after "OnChildAdded" event
-                            .title(dataSnapshot.getKey())
-                            .snippet(updatedDrivewayData.getName())
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.plower)));
-                    userMarkers.put(dataSnapshot.getKey(), updatedDrivewayData);
-                }
+//                }
             }
 
             @Override

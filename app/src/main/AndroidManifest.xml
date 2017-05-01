@@ -15,7 +15,7 @@
     <application
         android:name=".GlobalVariables"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/needsplowing"
         android:label="SnowSense"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">

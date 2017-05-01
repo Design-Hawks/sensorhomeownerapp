@@ -12,54 +12,65 @@
     tools:context="com.example.snowiot.snowiotsimple.UserContactedWindow">
 
 
-    <Button
-        android:text="Accept"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="400dp"
-        android:layout_marginLeft="150dp"
-        android:id="@+id/hireContacter" />
-
-    <Button
-        android:text="Decline"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="400dp"
-        android:layout_marginLeft="250dp"
-        android:id="@+id/declineContacter" />
-
-
     <ImageView
-        android:layout_width="100dp"
-        android:layout_height="200dp"
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
         app:srcCompat="@color/authui_inputTextColor"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/snowPlowPhoto"
         android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="31dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_above="@+id/contacterName" />
+        android:layout_marginRight="17dp"
+        android:layout_marginEnd="17dp">
 
-    <TextView
-        android:text="Provider:"
+        <Button
+            android:text="Accept"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:id="@+id/hireContacter"/>
+
+        <Button
+            android:text="Decline"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:id="@+id/declineContacter" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="12pt"
-        android:id="@+id/contacterName"
-        android:layout_above="@+id/contacterInfo"
+        android:layout_below="@+id/snowPlowPhoto"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="12pt"
-        android:id="@+id/contacterInfo"
-        android:layout_marginBottom="122dp"
-        android:layout_alignBottom="@+id/hireContacter"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        <TextView
+            android:text="Provider:"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/tw__composer_black"
+            android:textSize="18dp"
+            android:id="@+id/contacterName" />
+
+        <TextView
+            android:text="Rating:"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/tw__composer_black"
+            android:textSize="18dp"
+            android:id="@+id/contactorRating"/>
+    </LinearLayout>
 
 
 </RelativeLayout>
